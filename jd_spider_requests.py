@@ -10,8 +10,8 @@ from lxml import etree
 from jd_logger import logger
 from timer import Timer
 from config import global_config
-# from concurrent.futures import ProcessPoolExecutor
-import threading
+from concurrent.futures import ProcessPoolExecutor
+# import threading
 from exception import SKException
 from util import (
     parse_json,
@@ -326,20 +326,23 @@ class JdSeckill(object):
         self._seckill()
 
     @check_login
-    def seckill_by_proc_pool(self, work_count=3):
+    def seckill_by_proc_pool(self, work_count=5):
+        """
+        multi threads
+        """
+        # threads = []
+        # for i in range(work_count):
+        #     threads.append(threading.Thread(target=self.seckill))
+        # for t in threads:
+        #     t.start()
+        # threads[0].join()
         """
         多进程进行抢购
         work_count：进程数量
         """
-        threads = []
-        for i in range(work_count):
-            threads.append(threading.Thread(target=self.seckill))
-        for t in threads:
-            t.start()
-        threads[0].join()
-        # with ProcessPoolExecutor(work_count) as pool:
-            # for i in range(work_count):
-                # pool.submit(self.seckill)
+        with ProcessPoolExecutor(work_count) as pool:
+            for i in range(work_count):
+                pool.submit(self.seckill)
 
     def _reserve(self):
         """
