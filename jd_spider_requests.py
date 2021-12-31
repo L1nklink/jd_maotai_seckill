@@ -10,7 +10,8 @@ from lxml import etree
 from jd_logger import logger
 from timer import Timer
 from config import global_config
-from concurrent.futures import ProcessPoolExecutor
+# from concurrent.futures import ProcessPoolExecutor
+import threading
 from exception import SKException
 from util import (
     parse_json,
@@ -271,7 +272,7 @@ class JdSeckill(object):
 
         # 初始化信息
         self.sku_id = global_config.getRaw('config', 'sku_id')
-        self.seckill_num = 2
+        self.seckill_num = 1
         self.seckill_init_info = dict()
         self.seckill_url = dict()
         self.seckill_order_data = dict()
@@ -325,14 +326,20 @@ class JdSeckill(object):
         self._seckill()
 
     @check_login
-    def seckill_by_proc_pool(self, work_count=5):
+    def seckill_by_proc_pool(self, work_count=3):
         """
         多进程进行抢购
         work_count：进程数量
         """
-        with ProcessPoolExecutor(work_count) as pool:
-            for i in range(work_count):
-                pool.submit(self.seckill)
+        threads = []
+        for i in range(work_count):
+            threads.append(threading.Thread(target=self.seckill))
+        for t in threads:
+            t.start()
+        threads[0].join()
+        # with ProcessPoolExecutor(work_count) as pool:
+            # for i in range(work_count):
+                # pool.submit(self.seckill)
 
     def _reserve(self):
         """
@@ -523,7 +530,7 @@ class JdSeckill(object):
         # 获取用户秒杀初始化信息
         self.seckill_init_info[self.sku_id] = self._get_seckill_init_info()
         init_info = self.seckill_init_info.get(self.sku_id)
-        default_address = init_info['addressList'][0]  # 默认地址dict
+        default_address = init_info['address']  # 默认地址dict
         invoice_info = init_info.get('invoiceInfo', {})  # 默认发票信息dict, 有可能不返回
         token = init_info['token']
         data = {

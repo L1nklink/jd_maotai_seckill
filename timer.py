@@ -22,16 +22,24 @@ class Timer(object):
         self.sleep_interval = sleep_interval
 
         self.diff_time = self.local_jd_time_diff()
-
     def jd_time(self):
         """
         从京东服务器获取时间毫秒
         :return:
         """
-        url = 'https://a.jd.com//ajax/queryServerData.html'
-        ret = requests.get(url).text
+        url = 'https://api.m.jd.com/client.action?functionId=queryMaterialProducts&client=wh5'
+        ret = requests.post(url).text
         js = json.loads(ret)
-        return int(js["serverTime"])
+        return int(js["currentTime2"])
+    # def jd_time(self):
+    #     """
+    #     从京东服务器获取时间毫秒
+    #     :return:
+    #     """
+    #     url = 'https://a.jd.com//ajax/queryServerData.html'
+    #     ret = requests.get(url).text
+    #     js = json.loads(ret)
+    #     return int(js["serverTime"])
 
     def local_time(self):
         """
